@@ -32,13 +32,10 @@ def gen_data(n: int) -> CustomDataset:
 
 if __name__ == "__main__":
 
-    rank = int(os.environ["RANK"])
-    print(f"worker rank: {rank}")
-    world_size = int(os.environ["WORLD_SIZE"])
-    if rank == 0:
-        print(f"world size: {world_size}")
-    dist.init_process_group(backend = "nccl", rank = rank, world_size = world_size)
     torch.cuda.set_device(torch.cuda.current_device())
+    rank = int(os.environ["RANK"])
+    world_size = int(os.environ["WORLD_SIZE"])
+    dist.init_process_group(backend = "nccl", rank = rank, world_size = world_size)
 
     model = MLP()
     fsdp_model = FullyShardedDataParallel(
