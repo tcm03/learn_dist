@@ -32,6 +32,7 @@ def gen_data(n: int) -> CustomDataset:
 
 if __name__ == "__main__":
 
+    logging.debug(f"cuda.current_device: {torch.cuda.current_device()}")
     torch.cuda.set_device(torch.cuda.current_device())
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
