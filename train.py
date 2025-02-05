@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import os
 from nnetwork import MLP
 from data import CustomDataset
+from functools import partial
 import logging
 
 logging.basicConfig(
@@ -45,17 +46,18 @@ if __name__ == "__main__":
     world_size = int(os.environ["WORLD_SIZE"])
     logging.debug(f"In rank {rank}: cuda.current_device: {torch.cuda.current_device()}")
     device = torch.device(f"cuda:{rank}")
-    # torch.cuda.set_device(torch.cuda.current_device())
+    torch.cuda.set_device(device)
     dist.init_process_group(backend = "nccl")
 
-    model = MLP().to(device)
+    model = MLP()
     logging.info(f"model: {model}")
     total_params, trainable_params = inspect_params(model)
     logging.info(f"Total params: {total_params}\nTrainable params: {trainable_params}")
+    size_based_auto_wrap_70m = partial(size_based_auto_wrap_policy, min_num_params = 70000000)
     fsdp_model = FullyShardedDataParallel(
         model,
         device_id = device,
-        auto_wrap_policy = size_based_auto_wrap_policy,
+        auto_wrap_policy = size_based_auto_wrap_70m,
         cpu_offload = CPUOffload(offload_params = True)
     )
     optim = torch.optim.Adam(fsdp_model.parameters(), lr = 0.0001)
