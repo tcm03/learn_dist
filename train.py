@@ -56,7 +56,6 @@ if __name__ == "__main__":
     size_based_auto_wrap_70m = partial(size_based_auto_wrap_policy, min_num_params = 100000000)
     fsdp_model = FullyShardedDataParallel(
         model,
-        device_id = device,
         auto_wrap_policy = size_based_auto_wrap_70m,
         cpu_offload = CPUOffload(offload_params = True)
     )
