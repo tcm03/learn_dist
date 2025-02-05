@@ -45,7 +45,7 @@ if __name__ == "__main__":
     world_size = int(os.environ["WORLD_SIZE"])
     logging.debug(f"In rank {rank}: cuda.current_device: {torch.cuda.current_device()}")
     device = torch.device(f"cuda:{rank}")
-    torch.cuda.set_device(torch.cuda.current_device())
+    # torch.cuda.set_device(torch.cuda.current_device())
     dist.init_process_group(backend = "nccl")
 
     model = MLP().to(device)
@@ -54,6 +54,7 @@ if __name__ == "__main__":
     logging.info(f"Total params: {total_params}\nTrainable params: {trainable_params}")
     fsdp_model = FullyShardedDataParallel(
         model,
+        device_id = device,
         auto_wrap_policy = size_based_auto_wrap_policy,
         cpu_offload = CPUOffload(offload_params = True)
     )
