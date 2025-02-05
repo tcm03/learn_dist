@@ -16,7 +16,7 @@ from data import CustomDataset
 import logging
 
 logging.basicConfig(
-    level = logging.DEBUG,
+    level = logging.INFO,
     format = "%(asctime)s - %(filename)s: %(lineno)s - %(funcName)s - %(levelname)s - %(message)s"
 )
 
@@ -26,29 +26,41 @@ def gen_data(n: int) -> CustomDataset:
     ts_list = []
     labels = []
     for _ in range(n):
-        ts_list.append(torch.randn(100))
-        labels.append(torch.randint(high = 100, size = (1,)))
+        ts_list.append(torch.randn(1000))
+        labels.append(torch.randint(high = 1000, size = ()))
     return CustomDataset(ts_list, labels)
+
+def inspect_params(model):
+    total = 0
+    trainable = 0
+    for param in model.parameters():
+        total += param.numel()
+        if param.requires_grad == True:
+            trainable += param.numel()
+    return total, trainable
 
 if __name__ == "__main__":
 
-    logging.debug(f"cuda.current_device: {torch.cuda.current_device()}")
-    torch.cuda.set_device(torch.cuda.current_device())
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
+    logging.debug(f"In rank {rank}: cuda.current_device: {torch.cuda.current_device()}")
+    device = torch.device(f"cuda:{rank}")
+    torch.cuda.set_device(torch.cuda.current_device())
     dist.init_process_group(backend = "nccl")
 
-    model = MLP()
+    model = MLP().to(device)
+    logging.info(f"model: {model}")
+    total_params, trainable_params = inspect_params(model)
+    logging.info(f"Total params: {total_params}\nTrainable params: {trainable_params}")
     fsdp_model = FullyShardedDataParallel(
         model,
-        device_id = torch.cuda.current_device(),
         auto_wrap_policy = size_based_auto_wrap_policy,
         cpu_offload = CPUOffload(offload_params = True)
     )
     optim = torch.optim.Adam(fsdp_model.parameters(), lr = 0.0001)
     custom_dataset = gen_data(100)
     dataloader = DataLoader(custom_dataset, batch_size = 10, shuffle = True)
-    device = next(fsdp_model.parameters()).device
+    
     logging.debug(f"device: {device}")
     for i in range(NUM_EPOCHS):
         print(f"Epoch {i+1}/{NUM_EPOCHS}")
