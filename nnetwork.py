@@ -4,10 +4,10 @@ class MLP(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc_layers = nn.Sequential(
-            nn.Linear(1000, 10000),
+            nn.Linear(1000, 700000),
             # nn.Linear(200, 400),
             # nn.Linear(400, 200),
-            nn.Linear(10000, 1000)
+            nn.Linear(700000, 1000)
         )
         
     def forward(self, x):
