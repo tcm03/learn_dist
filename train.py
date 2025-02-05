@@ -53,7 +53,7 @@ if __name__ == "__main__":
     logging.info(f"model: {model}")
     total_params, trainable_params = inspect_params(model)
     logging.info(f"Total params: {total_params}\nTrainable params: {trainable_params}")
-    size_based_auto_wrap_70m = partial(size_based_auto_wrap_policy, min_num_params = 70000000)
+    size_based_auto_wrap_70m = partial(size_based_auto_wrap_policy, min_num_params = 100000000)
     fsdp_model = FullyShardedDataParallel(
         model,
         device_id = device,
